@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Auth;
@@ -21,14 +20,6 @@ class UsersController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created user in storage.
      *
      * @param UserRequest $request
@@ -36,29 +27,30 @@ class UsersController extends Controller
      */
     public function store(UserRequest $request): JsonResponse
     {
-        $new_user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Auth::login($new_user);
+        $user = User::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+        ]);
 
-        return response()->json(['created' => true], Response::HTTP_OK);
+        if ($user) {
+            return response()->json(['status' => 'success', 'message' => 'User created successfully'], 201);
+        } else {
+            return response()->json(['status' => 'error', 'message' => 'Failed to create user'], 500);
+        }
     }
+
 
     /**
      * Display the specified resource.
      */
     public function show(User $user)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
     {
         //
     }
